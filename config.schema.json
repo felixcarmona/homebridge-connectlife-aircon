@@ -1,0 +1,28 @@
+{
+  "pluginAlias": "ConnectLifeHVAC",
+  "pluginType": "platform",
+  "singular": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Platform Name",
+        "type": "string",
+        "default": "ConnectLife HVAC"
+      },
+      "debug": {
+        "title": "Enable Debug Logging",
+        "type": "boolean",
+        "default": false
+      }
+    }
+  },
+  "form": [
+    "name",
+    "debug"
+  ],
+  "display": {
+    "name": "ConnectLife HVAC (Mock)",
+    "description": "Mock ConnectLife HVAC platform for Apple Home"
+  }
+}
