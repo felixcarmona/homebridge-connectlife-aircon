@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge ConnectLife Aircon",
   "name": "homebridge-connectlife-aircon",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "felixcarmona",
 
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
 
   "engines": {
     "node": ">=18.0.0",
-    "homebridge": ">=1.6.0"
+    "homebridge": ">=2.0.0"
   },
 
   "peerDependencies": {
