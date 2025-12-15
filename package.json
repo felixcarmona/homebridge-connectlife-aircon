@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge ConnectLife Aircon",
   "name": "homebridge-connectlife-aircon",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "felixcarmona",
   "homepage": "https://github.com/felixcarmona/homebridge-connectlife-aircon",
   "bugs": {

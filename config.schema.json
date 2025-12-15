@@ -6,12 +6,11 @@
   "footerDisplay": "Configure your ConnectLife Aircon appliances by name.",
   "schema": {
     "type": "object",
-    "required": ["email", "password", "appliances"],
+    "required": ["name","email", "password", "appliances"],
     "properties": {
       "name": {
         "title": "Plugin Name",
         "type": "string",
-        "required": true,
         "default": "ConnectLife Aircon",
         "description": "ConnectLife account email"
       },
