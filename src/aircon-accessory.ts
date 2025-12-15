@@ -92,7 +92,7 @@ export class AirconAccessory {
                 return this.appliance.getTargetTemperature();
             })
             .onSet(async (value) => {
-                this.appliance.setTargetTemperature(value as number, Characteristic.CurrentHeatingCoolingState.COOL).catch(err => {
+                this.appliance.setTargetTemperature(value as number).catch(err => {
                     this.platform.log.error(err);
                 });
             });
@@ -103,7 +103,7 @@ export class AirconAccessory {
                 return this.appliance.getTargetTemperature();
             })
             .onSet(async (value) => {
-                this.appliance.setTargetTemperature(value as number, Characteristic.CurrentHeatingCoolingState.HEAT).catch(err => {
+                this.appliance.setTargetTemperature(value as number).catch(err => {
                     this.platform.log.error(err);
                 });
             });

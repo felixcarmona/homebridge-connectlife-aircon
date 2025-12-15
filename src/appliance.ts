@@ -24,8 +24,7 @@ export class Appliance {
 
     constructor(
         private readonly name: string,
-        private readonly api: ConnectLifeApi,
-        private readonly log: Logging,
+        private readonly api: ConnectLifeApi
     ) {}
 
     public updateFromApi(connectLifeAppliance: ConnectLifeAppliance): void {
@@ -77,7 +76,7 @@ export class Appliance {
         }
     }
 
-    async setTargetTemperature(value: number, targetMode: number): Promise<void> {
+    async setTargetTemperature(value: number): Promise<void> {
         this.ensureOnline();
 
         const prev = this.state.targetTemp;
@@ -94,9 +93,6 @@ export class Appliance {
             this.state.targetTemp = prev;
             throw err;
         }
-
-        // changing target temperature may change target mode. reapply it.
-        await this.setTargetMode(targetMode);
     }
 
     async setTargetMode(value: number): Promise<void> {

@@ -44,8 +44,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
         for (const applianceConfig of config?.appliances ?? []) {
             const appliance = new Appliance(
                 applianceConfig.name,
-                this.apiClient,
-                this.log,
+                this.apiClient
             );
             this.appliances.set(applianceConfig.name, appliance);
         }
