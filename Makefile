@@ -12,14 +12,15 @@ RSYNC_EXCLUDES = \
 	--exclude .git \
 	--exclude .DS_Store
 
-lint:
-	npx tsc --noEmit
-
 clean:
 	rm -rf node_modules package-lock.json dist
 
-build: lint clean
+lint:
+	npx tsc --noEmit
+
+build: clean
 	npm install
+	make lint
 	npx tsc
 
 deploy: build

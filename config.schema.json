@@ -1,7 +1,6 @@
 {
   "pluginAlias": "ConnectLifeAircon",
   "pluginType": "platform",
-  "name": "ConnectLife Aircon",
   "singular": true,
   "headerDisplay": "ConnectLife Aircon",
   "footerDisplay": "Configure your ConnectLife Aircon appliances by name.",
@@ -9,6 +8,13 @@
     "type": "object",
     "required": ["email", "password", "appliances"],
     "properties": {
+      "name": {
+        "title": "Plugin Name",
+        "type": "string",
+        "required": true,
+        "default": "ConnectLife Aircon",
+        "description": "ConnectLife account email"
+      },
       "email": {
         "title": "Email",
         "type": "string",
