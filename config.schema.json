@@ -1,6 +1,7 @@
 {
   "pluginAlias": "ConnectLifeAircon",
   "pluginType": "platform",
+  "name": "ConnectLife Aircon",
   "singular": true,
   "headerDisplay": "ConnectLife Aircon",
   "footerDisplay": "Configure your ConnectLife Aircon appliances by name.",
