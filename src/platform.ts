@@ -1,10 +1,23 @@
-import {API, Logging, PlatformConfig, DynamicPlatformPlugin, PlatformAccessory} from 'homebridge';
-import {AirconAccessory} from './aircon-accessory';
-import {ConnectLifeApi} from './connect-life';
-import {Appliance} from "./appliance";
+import {
+    API,
+    Logging,
+    PlatformConfig,
+    DynamicPlatformPlugin,
+    PlatformAccessory,
+} from 'homebridge';
+import { AirconAccessory } from './aircon-accessory';
+import { ConnectLifeApi } from './connect-life';
+import { Appliance } from './appliance';
 
 interface ApplianceConfig {
     name: string;
+}
+
+interface ConnectLifeConfig extends PlatformConfig {
+    email?: string;
+    password?: string;
+    appliances?: ApplianceConfig[];
+    pollIntervalSeconds?: number;
 }
 
 export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
@@ -20,22 +33,33 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
 
     constructor(
         public readonly log: Logging,
-        public readonly config: PlatformConfig,
+        public readonly config: ConnectLifeConfig,
         public readonly api: API,
     ) {
         this.apiClient = new ConnectLifeApi(
-            this.config.email,
-            this.config.password,
+            config?.email ?? '',
+            config?.password ?? '',
         );
 
-        for (const applianceConfig of this.config.appliances) {
-            const appliance = new Appliance(applianceConfig.name, this.apiClient, this.log);
+        for (const applianceConfig of config?.appliances ?? []) {
+            const appliance = new Appliance(
+                applianceConfig.name,
+                this.apiClient,
+                this.log,
+            );
             this.appliances.set(applianceConfig.name, appliance);
         }
 
-        this.pollIntervalMs = (this.config.pollIntervalSeconds ?? 30) * 1000;
+        this.pollIntervalMs = (config?.pollIntervalSeconds ?? 30) * 1000;
 
         this.api.on('didFinishLaunching', async () => {
+            if (!config?.email || !config?.password) {
+                this.log.error(
+                    'Plugin disabled due to missing configuration',
+                );
+                return;
+            }
+
             await this.setupAccessories();
             this.startPolling();
         });
@@ -53,22 +77,24 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
         const run = async () => {
             try {
                 const apiAppliances = await this.apiClient.getAppliances();
+
                 for (const [name, appliance] of this.appliances) {
                     const apiAppliance = apiAppliances.get(name);
+
                     if (!apiAppliance) {
                         appliance.online = false;
-                        this.log.error(`appliance not found: ${name}`);
+                        this.log.error(`Appliance not found: ${name}`);
                         continue;
                     }
 
-                    appliance.updateFromApi(apiAppliance)
+                    appliance.updateFromApi(apiAppliance);
                 }
             } catch (err) {
-                this.log.error('refresh failed:', err);
+                this.log.error('Refresh failed:', err);
             }
         };
 
-        // first refresh immediately
+        // First refresh immediately
         void run();
 
         this.refreshTimer = setInterval(() => {
@@ -85,13 +111,17 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
 
     private async setupAccessories(): Promise<void> {
         const applianceNames: string[] = (this.config.appliances ?? []).map(
-            (d: ApplianceConfig) => d.name,
+            (d) => d.name,
         );
 
         // Remove stale accessories
         for (const accessory of this.accessories) {
             if (!applianceNames.includes(accessory.displayName)) {
-                this.log.info('Removing unused accessory:', accessory.displayName,);
+                this.log.info(
+                    'Removing unused accessory:',
+                    accessory.displayName,
+                );
+
                 this.api.unregisterPlatformAccessories(
                     'homebridge-connectlife-aircon',
                     'ConnectLifeAircon',
@@ -100,13 +130,14 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
             }
         }
 
+        // Register / restore accessories
         for (const name of applianceNames) {
             const uuid = this.api.hap.uuid.generate(
                 `connectlife-aircon-${name}`,
             );
 
             let platformAccessory = this.accessories.find(
-                acc => acc.UUID === uuid,
+                (acc) => acc.UUID === uuid,
             );
 
             if (!platformAccessory) {
@@ -119,7 +150,12 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 );
             }
 
-            new AirconAccessory(this, platformAccessory, this.appliances.get(name), name);
+            new AirconAccessory(
+                this,
+                platformAccessory,
+                this.appliances.get(name),
+                name,
+            );
         }
     }
 }
