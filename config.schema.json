@@ -1,28 +1,41 @@
 {
-  "pluginAlias": "ConnectLifeHVAC",
+  "pluginAlias": "ConnectLifeAircon",
   "pluginType": "platform",
   "singular": true,
+  "headerDisplay": "ConnectLife Aircon",
+  "footerDisplay": "Configure your ConnectLife Aircon appliances by name.",
   "schema": {
     "type": "object",
+    "required": ["email", "password", "appliances"],
     "properties": {
-      "name": {
-        "title": "Platform Name",
+      "email": {
+        "title": "Email",
         "type": "string",
-        "default": "ConnectLife HVAC"
+        "format": "email",
+        "description": "ConnectLife account email"
       },
-      "debug": {
-        "title": "Enable Debug Logging",
-        "type": "boolean",
-        "default": false
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "format": "password",
+        "description": "ConnectLife account password"
+      },
+      "appliances": {
+        "title": "Appliances",
+        "type": "array",
+        "description": "List of appliances to expose (by exact name)",
+        "items": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "name": {
+              "title": "Appliance Name",
+              "type": "string",
+              "description": "Exact appliance name as shown in ConnectLife (case-sensitive)"
+            }
+          }
+        }
       }
     }
-  },
-  "form": [
-    "name",
-    "debug"
-  ],
-  "display": {
-    "name": "ConnectLife HVAC (Mock)",
-    "description": "Mock ConnectLife HVAC platform for Apple Home"
   }
 }

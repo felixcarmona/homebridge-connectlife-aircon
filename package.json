@@ -1,15 +1,35 @@
 {
-  "name": "homebridge-connectlife-hvac",
+  "displayName": "Homebridge ConnectLife Aircon",
+  "name": "homebridge-connectlife-aircon",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "author": "felixcarmona",
+
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "aircon",
+    "connectlife"
+  ],
+
+  "engines": {
+    "node": ">=18.0.0",
+    "homebridge": ">=1.6.0"
   },
-  "private": true,
+
+  "peerDependencies": {
+    "homebridge": "^1.6.0"
+  },
+
+  "dependencies": {
+  },
+
   "devDependencies": {
-    "@types/node": "^25.0.1",
-    "homebridge": "^1.11.1",
-    "typescript": "^5.9.3"
+    "homebridge": "^1.6.0",
+    "typescript": "^5.9.3",
+    "@types/node": "^25.0.2",
+    "dotenv": "^17.2.3"
   }
 }
