@@ -38,7 +38,7 @@ From the Homebridge UI (recommended):
 
 1. Open the Homebridge web interface
 2. Go to "Plugins"
-3. Search for "Homebridge ConnectLife Aircon"
+3. Search for "homebridge-connectlife-aircon"
 4. Install the plugin
 5. Restart Homebridge
 
