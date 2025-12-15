@@ -52,6 +52,30 @@ export class AirconAccessory {
             });
 
         this.service
+            .getCharacteristic(Characteristic.CoolingThresholdTemperature)
+            .setProps({
+                minValue: 16,
+                maxValue: 32,
+                minStep: 1,
+            });
+
+        this.service
+            .getCharacteristic(Characteristic.TargetTemperature)
+            .setProps({
+                minValue: 16,
+                maxValue: 32,
+                minStep: 1,
+            });
+
+        this.service
+            .getCharacteristic(Characteristic.CoolingThresholdTemperature)
+            .setProps({
+                minValue: 16,
+                maxValue: 32,
+                minStep: 1,
+            });
+
+        this.service
             .getCharacteristic(Characteristic.TargetHeaterCoolerState)
             .onGet(() => {
                 return this.appliance.getTargetMode();
