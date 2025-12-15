@@ -16,9 +16,10 @@ lint:
 	npx tsc --noEmit
 
 clean:
-	rm -rf dist
+	rm -rf node_modules package-lock.json dist
 
 build: lint clean
+	npm install
 	npx tsc
 
 deploy: build

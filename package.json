@@ -1,38 +1,30 @@
 {
   "displayName": "Homebridge ConnectLife Aircon",
   "name": "homebridge-connectlife-aircon",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "felixcarmona",
-
   "homepage": "https://github.com/felixcarmona/homebridge-connectlife-aircon",
   "bugs": {
     "url": "https://github.com/felixcarmona/homebridge-connectlife-aircon/issues"
   },
-
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-
   "keywords": [
     "homebridge-plugin",
     "homebridge",
     "aircon",
     "connectlife"
   ],
-
   "engines": {
     "node": ">=18.0.0",
     "homebridge": "^1.6.0 || ^2.0.0-beta.0"
   },
-
   "peerDependencies": {
     "homebridge": "^1.6.0"
   },
-
-  "dependencies": {},
-
   "devDependencies": {
-    "typescript": "^5.9.3",
     "@types/node": "^25.0.2",
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "typescript": "^5.9.3"
   }
 }
