@@ -8,6 +8,10 @@ build/
 *.tsbuildinfo
 .env
 .env.*
+.connectlife-token-cache.json
+.connectlife-token-cache.json.tmp
+deploy-to-raspberry.local.sh
+*.tgz
 config.json
 .vscode/
 .idea/
