@@ -8,6 +8,9 @@ import {
 import { AirconAccessory } from './aircon-accessory';
 import { ConnectLifeApi } from './connect-life';
 import { Appliance } from './appliance';
+import {FileConnectLifeTokenStore} from './token-store';
+import path from 'node:path';
+import {AdaptivePoller} from './adaptive-poller';
 
 interface ApplianceConfig {
     name: string;
@@ -18,6 +21,7 @@ interface ConnectLifeConfig extends PlatformConfig {
     password?: string;
     appliances?: ApplianceConfig[];
     pollIntervalSeconds?: number;
+    diagnosticLogging?: boolean;
 }
 
 export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
@@ -28,7 +32,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
     private appliances: Map<string, Appliance> = new Map();
     private readonly apiClient: ConnectLifeApi;
 
-    private refreshTimer?: NodeJS.Timeout;
+    private poller?: AdaptivePoller;
     private readonly pollIntervalMs: number;
 
     constructor(
@@ -39,6 +43,14 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
         this.apiClient = new ConnectLifeApi(
             config?.email ?? '',
             config?.password ?? '',
+            {
+                tokenStore: new FileConnectLifeTokenStore(
+                    path.join(
+                        this.api.user.storagePath(),
+                        'connectlife-aircon.tokens.json',
+                    ),
+                ),
+            },
         );
 
         for (const applianceConfig of config?.appliances ?? []) {
@@ -74,38 +86,44 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
 
     private startPolling(): void {
         const run = async () => {
-            try {
-                const apiAppliances = await this.apiClient.getAppliances();
+            const apiAppliances = await this.apiClient.getAppliances();
 
-                for (const [name, appliance] of this.appliances) {
-                    const apiAppliance = apiAppliances.get(name);
+            for (const [name, appliance] of this.appliances) {
+                const apiAppliance = apiAppliances.get(name);
 
-                    if (!apiAppliance) {
-                        appliance.online = false;
-                        this.log.error(`Appliance not found: ${name}`);
-                        continue;
-                    }
-
-                    appliance.updateFromApi(apiAppliance);
+                if (!apiAppliance) {
+                    appliance.online = false;
+                    this.log.error(`Appliance not found: ${name}`);
+                    continue;
                 }
-            } catch (err) {
-                this.log.error('Refresh failed:', err);
+
+                appliance.updateFromApi(apiAppliance);
             }
         };
 
-        // First refresh immediately
-        void run();
+        this.poller = new AdaptivePoller(
+            run,
+            this.pollIntervalMs,
+            Math.max(this.pollIntervalMs, 15 * 60 * 1000),
+            (err, failures) => {
+                this.log.error(
+                    `Refresh failed (${failures} consecutive failure${failures === 1 ? '' : 's'}):`,
+                    err,
+                );
 
-        this.refreshTimer = setInterval(() => {
-            void run();
-        }, this.pollIntervalMs);
+                if (failures >= 3) {
+                    for (const appliance of this.appliances.values()) {
+                        appliance.online = false;
+                    }
+                }
+            },
+        );
+        this.poller.start();
     }
 
     private stopPolling(): void {
-        if (this.refreshTimer) {
-            clearInterval(this.refreshTimer);
-            this.refreshTimer = undefined;
-        }
+        this.poller?.stop();
+        this.poller = undefined;
     }
 
     private async setupAccessories(): Promise<void> {
@@ -138,6 +156,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
             let platformAccessory = this.accessories.find(
                 (acc) => acc.UUID === uuid,
             );
+            const restoredFromCache = Boolean(platformAccessory);
 
             if (!platformAccessory) {
                 platformAccessory = new this.api.platformAccessory(name, uuid);
@@ -149,12 +168,56 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 );
             }
 
+            const heaterCoolerServices = platformAccessory.services.filter(
+                (service) => service.UUID === this.Service.HeaterCooler.UUID,
+            );
+            if (heaterCoolerServices.length > 1) {
+                for (const duplicate of heaterCoolerServices.slice(1)) {
+                    platformAccessory.removeService(duplicate);
+                }
+                this.log.warn(
+                    `Removed ${heaterCoolerServices.length - 1} duplicate ` +
+                    `HeaterCooler service(s) from ${name}`,
+                );
+            }
+
             new AirconAccessory(
                 this,
                 platformAccessory,
-                this.appliances.get(name),
+                this.appliances.get(name)!,
                 name,
+            );
+
+            // Persist normalized characteristic properties while preserving the
+            // accessory UUID and therefore the existing HomeKit pairing.
+            this.api.updatePlatformAccessories([platformAccessory]);
+
+            if (this.config.diagnosticLogging) {
+                this.logAccessoryServices(platformAccessory, restoredFromCache);
+            }
+        }
+    }
+
+    private logAccessoryServices(
+        accessory: PlatformAccessory,
+        restoredFromCache: boolean,
+    ): void {
+        this.log.info(
+            `[diagnostic] ${accessory.displayName} UUID=${accessory.UUID} ` +
+            `source=${restoredFromCache ? 'cache' : 'new'}`,
+        );
+
+        for (const service of accessory.services) {
+            const characteristics = service.characteristics
+                .map((characteristic) => characteristic.displayName)
+                .sort()
+                .join(', ');
+            this.log.info(
+                `[diagnostic] service=${service.displayName} ` +
+                `UUID=${service.UUID} subtype=${service.subtype ?? '-'} ` +
+                `characteristics=[${characteristics}]`,
             );
         }
     }
+
 }

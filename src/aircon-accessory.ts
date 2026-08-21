@@ -19,6 +19,7 @@ export class AirconAccessory {
             this.platform.Characteristic.Name,
             this.name,
         );
+        this.service.setPrimaryService();
 
         this.registerCharacteristics();
     }
@@ -46,9 +47,9 @@ export class AirconAccessory {
                     : Characteristic.Active.INACTIVE;
             })
             .onSet(async (value) => {
-                this.appliance.setActive(value === Characteristic.Active.ACTIVE).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setActive(
+                    value === Characteristic.Active.ACTIVE,
+                );
             });
 
         this.service
@@ -68,22 +69,12 @@ export class AirconAccessory {
             });
 
         this.service
-            .getCharacteristic(Characteristic.CoolingThresholdTemperature)
-            .setProps({
-                minValue: 16,
-                maxValue: 32,
-                minStep: 1,
-            });
-
-        this.service
             .getCharacteristic(Characteristic.TargetHeaterCoolerState)
             .onGet(() => {
                 return this.appliance.getTargetMode();
             })
             .onSet(async (value) => {
-                this.appliance.setTargetMode(value as number).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setTargetMode(value as number);
             });
 
         this.service
@@ -92,9 +83,7 @@ export class AirconAccessory {
                 return this.appliance.getTargetTemperature();
             })
             .onSet(async (value) => {
-                this.appliance.setTargetTemperature(value as number).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setTargetTemperature(value as number);
             });
 
         this.service
@@ -103,9 +92,15 @@ export class AirconAccessory {
                 return this.appliance.getTargetTemperature();
             })
             .onSet(async (value) => {
-                this.appliance.setTargetTemperature(value as number).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setTargetTemperature(value as number);
+            });
+
+        this.service
+            .getCharacteristic(Characteristic.HeatingThresholdTemperature)
+            .setProps({
+                minValue: 16,
+                maxValue: 32,
+                minStep: 1,
             });
 
         this.service
@@ -126,9 +121,7 @@ export class AirconAccessory {
                 return this.appliance.getRotationSpeed();
             })
             .onSet(async (value) => {
-                this.appliance.setRotationSpeed(value as number).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setRotationSpeed(value as number);
             });
 
         this.service
@@ -137,9 +130,7 @@ export class AirconAccessory {
                 return this.appliance.getSwingMode();
             })
             .onSet(async (value) => {
-                this.appliance.setSwingMode(value as number).catch(err => {
-                    this.platform.log.error(err);
-                });
+                await this.appliance.setSwingMode(value as number);
             });
 
         this.service

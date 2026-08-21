@@ -24,18 +24,19 @@ export type HomeKitApplianceState = {
 
 function fanSpeedToRotation(speed?: number): number {
     switch (speed) {
+        case 0: return 0;
         case 5: return 20;
         case 6: return 35;
         case 7: return 50;
         case 8: return 75;
         case 9: return 100;
-        case 0:
         default:
-            return 20;
+            return 0;
     }
 }
 
 function rotationToFanSpeed(value: number): number {
+    if (value <= 0) return 0;
     if (value <= 25) return 5;
     if (value <= 40) return 6;
     if (value <= 60) return 7;
