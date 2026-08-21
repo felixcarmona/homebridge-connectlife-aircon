@@ -1,15 +1,18 @@
 import {PlatformAccessory, Service} from 'homebridge';
 import {ConnectLifeAirconPlatform} from './platform';
 import {Appliance} from './appliance';
+import {TimerController, TimerControllerConfig} from './timer-controller';
 
 export class AirconAccessory {
     private service: Service;
+    private timerController?: TimerController;
 
     constructor(
         private readonly platform: ConnectLifeAirconPlatform,
         private readonly accessory: PlatformAccessory,
         private readonly appliance: Appliance,
         private readonly name: string,
+        timerConfig?: TimerControllerConfig,
     ) {
         this.service =
             this.accessory.getService(this.platform.Service.HeaterCooler) ??
@@ -22,6 +25,22 @@ export class AirconAccessory {
         this.service.setPrimaryService();
 
         this.registerCharacteristics();
+
+        if (timerConfig) {
+            this.timerController = new TimerController(
+                platform,
+                accessory,
+                appliance,
+                name,
+                timerConfig,
+            );
+        } else {
+            TimerController.removePersistedService(platform, accessory);
+        }
+    }
+
+    public shutdown(): void {
+        this.timerController?.shutdown();
     }
 
     private registerCharacteristics(): void {

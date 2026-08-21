@@ -56,6 +56,7 @@ The user must configure the following fields:
 - Appliances (by exact name)
 - Polling interval in seconds (optional, default: 30)
 - HomeKit service diagnostics (optional, disabled by default)
+- Persistent shutdown timer per appliance (optional, disabled by default)
 
 
 IMPORTANT: Appliance name
@@ -82,7 +83,12 @@ Example configuration
   "diagnosticLogging": false,
   "appliances": [
     {
-      "name": "Living Room AC"
+      "name": "Living Room AC",
+      "timer": {
+        "enabled": true,
+        "durationMinutes": 60,
+        "turnOnWhenStarted": true
+      }
     },
     {
       "name": "Bedroom AC"
@@ -90,13 +96,19 @@ Example configuration
   ]
 }
 
+When enabled, the timer appears as a `Timer 1h` switch in the same HomeKit
+accessory. Turning it on optionally starts the AC and stores an absolute expiry
+in the Homebridge accessory cache. Turning it off cancels the timer without
+switching off the AC. The expiry survives Homebridge and Raspberry restarts.
+
 After setup
 -----------
 
 - Restart Homebridge
 - Open the Apple Home app
 - Your air conditioners will appear automatically
-- Each AC is shown as a single Heater / Cooler accessory
+- Each AC is shown as a Heater / Cooler accessory
+- Timer-enabled appliances also expose a timer switch in the same accessory
 
 
 Common issues

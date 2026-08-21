@@ -52,6 +52,29 @@
               "title": "Appliance Name",
               "type": "string",
               "description": "Exact appliance name as shown in ConnectLife (case-sensitive)"
+            },
+            "timer": {
+              "title": "Shutdown timer",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "title": "Enable timer switch",
+                  "type": "boolean",
+                  "default": false
+                },
+                "durationMinutes": {
+                  "title": "Timer duration in minutes",
+                  "type": "integer",
+                  "default": 60,
+                  "minimum": 1,
+                  "maximum": 10080
+                },
+                "turnOnWhenStarted": {
+                  "title": "Turn on AC when timer starts",
+                  "type": "boolean",
+                  "default": true
+                }
+              }
             }
           }
         }

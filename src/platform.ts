@@ -14,6 +14,11 @@ import {AdaptivePoller} from './adaptive-poller';
 
 interface ApplianceConfig {
     name: string;
+    timer?: {
+        enabled?: boolean;
+        durationMinutes?: number;
+        turnOnWhenStarted?: boolean;
+    };
 }
 
 interface ConnectLifeConfig extends PlatformConfig {
@@ -30,6 +35,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
 
     private accessories: PlatformAccessory[] = [];
     private appliances: Map<string, Appliance> = new Map();
+    private airconAccessories: AirconAccessory[] = [];
     private readonly apiClient: ConnectLifeApi;
 
     private poller?: AdaptivePoller;
@@ -76,6 +82,9 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
         });
 
         this.api.on('shutdown', () => {
+            for (const accessory of this.airconAccessories) {
+                accessory.shutdown();
+            }
             this.stopPolling();
         });
     }
@@ -181,12 +190,27 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 );
             }
 
-            new AirconAccessory(
+            const applianceConfig = (this.config.appliances ?? []).find(
+                (candidate) => candidate.name === name,
+            );
+            const timerConfig = applianceConfig?.timer?.enabled
+                ? {
+                    durationMinutes: this.validTimerDuration(
+                        applianceConfig.timer.durationMinutes,
+                    ),
+                    turnOnWhenStarted:
+                        applianceConfig.timer.turnOnWhenStarted ?? true,
+                }
+                : undefined;
+
+            const airconAccessory = new AirconAccessory(
                 this,
                 platformAccessory,
                 this.appliances.get(name)!,
                 name,
+                timerConfig,
             );
+            this.airconAccessories.push(airconAccessory);
 
             // Persist normalized characteristic properties while preserving the
             // accessory UUID and therefore the existing HomeKit pairing.
@@ -218,6 +242,13 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 `characteristics=[${characteristics}]`,
             );
         }
+    }
+
+    private validTimerDuration(value: number | undefined): number {
+        if (value === undefined || !Number.isFinite(value)) {
+            return 60;
+        }
+        return Math.min(10_080, Math.max(1, Math.trunc(value)));
     }
 
 }
