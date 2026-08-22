@@ -202,6 +202,29 @@ test('manual switch OFF cancels the timer without switching off the AC', async (
     assert.equal(h.cleared.length, 1);
 });
 
+test('appliance OFF cancels an active timer without sending another command', async () => {
+    const h = harness();
+    await h.on.setHandler(true);
+    h.appliance.active = false;
+
+    h.controller.cancelForApplianceOff();
+
+    assert.deepEqual(h.calls, [true]);
+    assert.equal(h.accessory.context.connectLifeTimer.expiresAt, 0);
+    assert.equal(h.on.value, false);
+    assert.equal(h.cleared.length, 1);
+});
+
+test('appliance OFF reconciliation is a no-op without an active timer', () => {
+    const h = harness();
+
+    h.controller.cancelForApplianceOff();
+
+    assert.deepEqual(h.calls, []);
+    assert.equal(h.on.value, false);
+    assert.equal(h.cleared.length, 0);
+});
+
 test('starting again replaces the previous expiry and timeout', async () => {
     const h = harness();
     h.appliance.active = true;

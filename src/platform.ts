@@ -50,6 +50,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
     private accessories: PlatformAccessory[] = [];
     private appliances: Map<string, Appliance> = new Map();
     private airconAccessories: AirconAccessory[] = [];
+    private airconAccessoriesByName: Map<string, AirconAccessory> = new Map();
     private readonly apiClient: ConnectLifeApi;
 
     private poller?: AdaptivePoller;
@@ -131,6 +132,9 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 }
 
                 appliance.updateFromApi(apiAppliance);
+                this.airconAccessoriesByName
+                    .get(name)
+                    ?.reconcileTimerWithApplianceState();
             }
         };
 
@@ -236,6 +240,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 timerConfig,
             );
             this.airconAccessories.push(airconAccessory);
+            this.airconAccessoriesByName.set(name, airconAccessory);
 
             // Persist normalized characteristic properties while preserving the
             // accessory UUID and therefore the existing HomeKit pairing.

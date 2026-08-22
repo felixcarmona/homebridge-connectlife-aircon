@@ -43,6 +43,12 @@ export class AirconAccessory {
         this.timerController?.shutdown();
     }
 
+    public reconcileTimerWithApplianceState(): void {
+        if (this.appliance.online && !this.appliance.getActive()) {
+            this.timerController?.cancelForApplianceOff();
+        }
+    }
+
     private registerCharacteristics(): void {
         const {Characteristic} = this.platform;
 
@@ -66,9 +72,11 @@ export class AirconAccessory {
                     : Characteristic.Active.INACTIVE;
             })
             .onSet(async (value) => {
-                await this.appliance.setActive(
-                    value === Characteristic.Active.ACTIVE,
-                );
+                const active = value === Characteristic.Active.ACTIVE;
+                await this.appliance.setActive(active);
+                if (!active) {
+                    this.timerController?.cancelForApplianceOff();
+                }
             });
 
         this.service

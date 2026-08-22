@@ -95,6 +95,12 @@ export class TimerController {
         this.clearScheduledTimeout();
     }
 
+    public cancelForApplianceOff(): void {
+        if (this.isActive()) {
+            this.cancel();
+        }
+    }
+
     private async handleSet(value: CharacteristicValue): Promise<void> {
         if (value === true || value === 1) {
             await this.start();
