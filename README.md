@@ -21,6 +21,9 @@ For each configured air conditioner, HomeKit will show:
 
 Everything is controlled from the Home app or via Siri.
 
+The plugin communicates directly with the ConnectLife / HijuConn cloud gateway.
+It does not require the external `connectlife.bapi.ovh` proxy.
+
 
 Requirements
 ------------
@@ -51,6 +54,8 @@ The user must configure the following fields:
 - Email
 - Password
 - Appliances (by exact name)
+- Polling interval in seconds (optional, default: 30)
+- HomeKit service diagnostics (optional, disabled by default)
 
 
 IMPORTANT: Appliance name
@@ -73,6 +78,8 @@ Example configuration
   "platform": "ConnectLifeAircon",
   "email": "you@example.com",
   "password": "your_connectlife_password",
+  "pollIntervalSeconds": 30,
+  "diagnosticLogging": false,
   "appliances": [
     {
       "name": "Living Room AC"
@@ -82,7 +89,6 @@ Example configuration
     }
   ]
 }
-
 
 After setup
 -----------
@@ -104,6 +110,11 @@ AC does not appear:
 Commands do not work:
 - Verify email and password
 - Make sure your ConnectLife account is working in the official app
+
+Different controls for otherwise similar accessories:
+- Temporarily enable `diagnosticLogging` and restart Homebridge
+- Compare the cached service lists in the Homebridge log
+- Disable the option again after diagnosis to keep normal logs compact
 - Check Homebridge logs for errors
 
 
@@ -111,8 +122,25 @@ Notes
 -----
 
 - This plugin uses the ConnectLife cloud API (no local control)
+- OAuth access and refresh tokens are cached in the Homebridge storage folder
+  with owner-only permissions, avoiding a complete Gigya login after every
+  restart when a refresh token is available
+- Polling requests never overlap and use automatic backoff during cloud errors
 - Auto mode behavior depends on the AC model and firmware
 - Fan speed is mapped approximately to HomeKit percentages
+
+
+Credits
+-------
+
+The direct ConnectLife gateway implementation is based on the protocol
+documented by the MIT-licensed
+[bilan/connectlife-api-connector](https://github.com/bilan/connectlife-api-connector)
+project and was cross-checked against the
+[oyvindwe/connectlife](https://github.com/oyvindwe/connectlife) Python library.
+
+This plugin uses undocumented ConnectLife/HijuConn cloud endpoints. These
+endpoints and their authentication protocol may change without notice.
 
 
 Disclaimer

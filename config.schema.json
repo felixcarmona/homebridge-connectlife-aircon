@@ -26,6 +26,20 @@
         "format": "password",
         "description": "ConnectLife account password"
       },
+      "pollIntervalSeconds": {
+        "title": "Polling interval",
+        "type": "integer",
+        "default": 30,
+        "minimum": 15,
+        "maximum": 900,
+        "description": "Seconds between successful ConnectLife status updates. Errors use automatic backoff."
+      },
+      "diagnosticLogging": {
+        "title": "HomeKit service diagnostics",
+        "type": "boolean",
+        "default": false,
+        "description": "Log cached HomeKit service and characteristic names without values or cloud credentials."
+      },
       "appliances": {
         "title": "Appliances",
         "type": "array",

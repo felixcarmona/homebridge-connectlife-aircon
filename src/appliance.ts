@@ -1,5 +1,4 @@
 import { ConnectLifeAppliance, ConnectLifeApi } from './connect-life';
-import {Logging} from 'homebridge';
 import {HomeKitApplianceState, mapConnectLifeToHomeKit, mapHomeKitToConnectLife,} from './appliance-state';
 
 export class ApplianceOfflineError extends Error {
@@ -12,6 +11,15 @@ export class Appliance {
     public online = false;
 
     private puid: string | null = null;
+    private connectLifeState = {
+        t_power: 0,
+        t_temp: 16,
+        t_temp_type: 0,
+        t_fan_speed: 0,
+        t_up_down: 0,
+        t_work_mode: 4,
+        f_temp_in: 0,
+    };
     private state: HomeKitApplianceState = {
         active: false,
         targetTemp: 16,
@@ -29,8 +37,12 @@ export class Appliance {
 
     public updateFromApi(connectLifeAppliance: ConnectLifeAppliance): void {
         this.puid = connectLifeAppliance.puid;
-        this.state = mapConnectLifeToHomeKit(connectLifeAppliance.state);
-        this.online = true;
+        this.connectLifeState = {
+            ...this.connectLifeState,
+            ...connectLifeAppliance.state,
+        };
+        this.state = mapConnectLifeToHomeKit(this.connectLifeState);
+        this.online = connectLifeAppliance.online;
     }
 
     getActive(): boolean {
@@ -102,14 +114,20 @@ export class Appliance {
         this.state.targetMode = value;
         const rotationSpeed = this.state.rotationSpeed;
         try {
-            await this.api.setApplianceStatus(this.puid!, mapHomeKitToConnectLife({targetMode: value}, this.state.tempUnit));
+            await this.api.setApplianceStatus(
+                this.puid!,
+                mapHomeKitToConnectLife(
+                    {
+                        targetMode: value,
+                        rotationSpeed,
+                    },
+                    this.state.tempUnit,
+                ),
+            );
         } catch (err) {
             this.state.targetMode = prev;
             throw err;
         }
-
-        // switching target mode will reset rotation speed, reapply it.
-        await this.setRotationSpeed(rotationSpeed);
     }
 
     async setRotationSpeed(value: number): Promise<void> {
