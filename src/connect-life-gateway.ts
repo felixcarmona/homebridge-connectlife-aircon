@@ -1,3 +1,6 @@
+// Gateway request format and signing protocol based on:
+// https://github.com/bilan/connectlife-api-connector
+// Reimplemented in TypeScript for this Homebridge plugin.
 import {
     constants,
     createHash,
