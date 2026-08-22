@@ -162,6 +162,19 @@ Notes
 - Fan speed is mapped approximately to HomeKit percentages
 
 
+Credits
+-------
+
+The direct ConnectLife gateway implementation is based on the protocol
+documented by the MIT-licensed
+[bilan/connectlife-api-connector](https://github.com/bilan/connectlife-api-connector)
+project and was cross-checked against the
+[oyvindwe/connectlife](https://github.com/oyvindwe/connectlife) Python library.
+
+This plugin uses undocumented ConnectLife/HijuConn cloud endpoints. These
+endpoints and their authentication protocol may change without notice.
+
+
 Disclaimer
 ----------
 
