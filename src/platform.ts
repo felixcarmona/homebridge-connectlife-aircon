@@ -12,13 +12,27 @@ import {FileConnectLifeTokenStore} from './token-store';
 import path from 'node:path';
 import {AdaptivePoller} from './adaptive-poller';
 
-interface ApplianceConfig {
+export interface ApplianceConfig {
     name: string;
     timer?: {
         enabled?: boolean;
         durationMinutes?: number;
         turnOnWhenStarted?: boolean;
     };
+}
+
+export function validApplianceConfigs(value: unknown): ApplianceConfig[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    return value.filter((candidate): candidate is ApplianceConfig => {
+        if (!candidate || typeof candidate !== 'object') {
+            return false;
+        }
+        const name = (candidate as {name?: unknown}).name;
+        return typeof name === 'string' && name.trim().length > 0;
+    });
 }
 
 interface ConnectLifeConfig extends PlatformConfig {
@@ -59,7 +73,17 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
             },
         );
 
-        for (const applianceConfig of config?.appliances ?? []) {
+        const applianceConfigs = validApplianceConfigs(config?.appliances);
+        const configuredCount = Array.isArray(config?.appliances)
+            ? config.appliances.length
+            : 0;
+        if (applianceConfigs.length !== configuredCount) {
+            this.log.warn(
+                'Ignoring appliance configuration entries with an empty name',
+            );
+        }
+
+        for (const applianceConfig of applianceConfigs) {
             const appliance = new Appliance(
                 applianceConfig.name,
                 this.apiClient
@@ -136,7 +160,8 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
     }
 
     private async setupAccessories(): Promise<void> {
-        const applianceNames: string[] = (this.config.appliances ?? []).map(
+        const applianceConfigs = validApplianceConfigs(this.config.appliances);
+        const applianceNames: string[] = applianceConfigs.map(
             (d) => d.name,
         );
 
@@ -190,7 +215,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 );
             }
 
-            const applianceConfig = (this.config.appliances ?? []).find(
+            const applianceConfig = applianceConfigs.find(
                 (candidate) => candidate.name === name,
             );
             const timerConfig = applianceConfig?.timer?.enabled

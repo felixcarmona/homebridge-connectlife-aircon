@@ -12,6 +12,7 @@
   "files": [
     "dist",
     "!dist/dev",
+    "branding/connectlife-icon.png",
     "config.schema.json",
     "README.md",
     "LICENSE"

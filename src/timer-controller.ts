@@ -107,6 +107,9 @@ export class TimerController {
         if (this.config.turnOnWhenStarted && !this.appliance.getActive()) {
             await this.appliance.setActive(true);
         }
+        if (this.config.turnOnWhenStarted) {
+            this.updateHeaterCoolerActive(true);
+        }
 
         const state: PersistedTimerState = {
             version: 1,
@@ -191,6 +194,7 @@ export class TimerController {
 
         try {
             await this.appliance.setActive(false);
+            this.updateHeaterCoolerActive(false);
             this.retryCount = 0;
             this.persist(this.emptyState());
             this.updateSwitch(false);
@@ -257,6 +261,55 @@ export class TimerController {
         this.service
             .getCharacteristic(this.platform.Characteristic.On)
             .updateValue(active);
+    }
+
+    private updateHeaterCoolerActive(active: boolean): void {
+        const heaterCooler = this.accessory.getService(
+            this.platform.Service.HeaterCooler,
+        );
+        if (!heaterCooler) {
+            return;
+        }
+
+        const {Characteristic} = this.platform;
+        heaterCooler.updateCharacteristic(
+            Characteristic.Active,
+            active
+                ? Characteristic.Active.ACTIVE
+                : Characteristic.Active.INACTIVE,
+        );
+
+        heaterCooler.updateCharacteristic(
+            Characteristic.TargetHeaterCoolerState,
+            this.appliance.getTargetMode(),
+        );
+        heaterCooler.updateCharacteristic(
+            Characteristic.CurrentHeaterCoolerState,
+            this.currentHeaterCoolerState(active),
+        );
+    }
+
+    private currentHeaterCoolerState(active: boolean): number {
+        const {CurrentHeaterCoolerState, TargetHeaterCoolerState} =
+            this.platform.Characteristic;
+        if (!active) {
+            return CurrentHeaterCoolerState.INACTIVE;
+        }
+
+        const delta = this.appliance.getTargetTemperature() -
+            this.appliance.getCurrentTemperature();
+        if (Math.abs(delta) < 0.3) {
+            return CurrentHeaterCoolerState.IDLE;
+        }
+
+        const mode = this.appliance.getTargetMode();
+        if (mode === TargetHeaterCoolerState.HEAT) {
+            return CurrentHeaterCoolerState.HEATING;
+        }
+        if (mode === TargetHeaterCoolerState.COOL) {
+            return CurrentHeaterCoolerState.COOLING;
+        }
+        return CurrentHeaterCoolerState.IDLE;
     }
 
     private clearScheduledTimeout(): void {

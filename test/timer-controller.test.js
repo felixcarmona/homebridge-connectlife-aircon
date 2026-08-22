@@ -39,13 +39,34 @@ class FakeService {
         }
         return this.characteristics.get(characteristic);
     }
+
+    updateCharacteristic(characteristic, value) {
+        this.getCharacteristic(characteristic).updateValue(value);
+        return this;
+    }
 }
 
 function harness({now = 1_000_000, context = {}, setActive} = {}) {
     const Switch = function Switch() {};
     Switch.UUID = 'switch-uuid';
+    const HeaterCooler = function HeaterCooler() {};
+    HeaterCooler.UUID = 'heater-cooler-uuid';
     const Name = {name: 'Name'};
     const On = {name: 'On'};
+    const Active = {name: 'Active', INACTIVE: 0, ACTIVE: 1};
+    const TargetHeaterCoolerState = {
+        name: 'TargetHeaterCoolerState',
+        HEAT: 1,
+        COOL: 2,
+    };
+    const CurrentHeaterCoolerState = {
+        name: 'CurrentHeaterCoolerState',
+        INACTIVE: 0,
+        IDLE: 1,
+        HEATING: 2,
+        COOLING: 3,
+    };
+    const heaterCooler = new FakeService('Test AC');
     const services = [];
     const scheduled = [];
     const cleared = [];
@@ -56,6 +77,8 @@ function harness({now = 1_000_000, context = {}, setActive} = {}) {
         services,
         getServiceById: (_constructor, subtype) =>
             services.find((service) => service.subtype === subtype),
+        getService: (constructor) =>
+            constructor === HeaterCooler ? heaterCooler : undefined,
         addService: (_constructor, name, subtype) => {
             const service = new FakeService(name, subtype);
             services.push(service);
@@ -67,8 +90,14 @@ function harness({now = 1_000_000, context = {}, setActive} = {}) {
         },
     };
     const platform = {
-        Service: {Switch},
-        Characteristic: {Name, On},
+        Service: {Switch, HeaterCooler},
+        Characteristic: {
+            Name,
+            On,
+            Active,
+            TargetHeaterCoolerState,
+            CurrentHeaterCoolerState,
+        },
         api: {
             updatePlatformAccessories: (accessories) => updates.push(accessories),
         },
@@ -79,6 +108,9 @@ function harness({now = 1_000_000, context = {}, setActive} = {}) {
         getActive() {
             return this.active;
         },
+        getTargetMode: () => TargetHeaterCoolerState.COOL,
+        getTargetTemperature: () => 22,
+        getCurrentTemperature: () => 25,
         async setActive(value) {
             calls.push(value);
             if (setActive) {
@@ -114,6 +146,7 @@ function harness({now = 1_000_000, context = {}, setActive} = {}) {
         calls,
         cleared,
         controller,
+        heaterCooler,
         on,
         platform,
         runtime,
@@ -140,6 +173,22 @@ test('creates one stable Timer 1h switch and starts a persistent timer', async (
     assert.equal(h.accessory.context.connectLifeTimer.expiredPendingOff, false);
     assert.equal(h.on.value, true);
     assert.equal(h.scheduled.at(-1).delayMs, 3_600_000);
+    assert.equal(
+        h.heaterCooler.getCharacteristic(h.platform.Characteristic.Active).value,
+        h.platform.Characteristic.Active.ACTIVE,
+    );
+    assert.equal(
+        h.heaterCooler
+            .getCharacteristic(h.platform.Characteristic.TargetHeaterCoolerState)
+            .value,
+        h.platform.Characteristic.TargetHeaterCoolerState.COOL,
+    );
+    assert.equal(
+        h.heaterCooler
+            .getCharacteristic(h.platform.Characteristic.CurrentHeaterCoolerState)
+            .value,
+        h.platform.Characteristic.CurrentHeaterCoolerState.COOLING,
+    );
 });
 
 test('manual switch OFF cancels the timer without switching off the AC', async () => {
@@ -190,6 +239,16 @@ test('expiry switches off once and clears persistent state', async () => {
     assert.equal(h.accessory.context.connectLifeTimer.expiresAt, 0);
     assert.equal(h.accessory.context.connectLifeTimer.expiredPendingOff, false);
     assert.equal(h.on.value, false);
+    assert.equal(
+        h.heaterCooler.getCharacteristic(h.platform.Characteristic.Active).value,
+        h.platform.Characteristic.Active.INACTIVE,
+    );
+    assert.equal(
+        h.heaterCooler
+            .getCharacteristic(h.platform.Characteristic.CurrentHeaterCoolerState)
+            .value,
+        h.platform.Characteristic.CurrentHeaterCoolerState.INACTIVE,
+    );
 });
 
 test('restores a future timer after restart without creating a duplicate service', () => {

@@ -1,6 +1,10 @@
 Homebridge ConnectLife Aircon
 ============================
 
+<p align="center">
+  <img src="branding/connectlife-icon.png" width="160" alt="ConnectLife logo">
+</p>
+
 Control your ConnectLife air conditioners from Apple HomeKit using Homebridge.
 
 This plugin connects to your ConnectLife account and exposes your air
@@ -109,6 +113,22 @@ After setup
 - Your air conditioners will appear automatically
 - Each AC is shown as a Heater / Cooler accessory
 - Timer-enabled appliances also expose a timer switch in the same accessory
+
+
+Set up a Siri shortcut
+----------------------
+
+The timer can be started by Siri through the Apple Shortcuts app:
+
+1. Open **Shortcuts** on an iPhone or iPad and create a new shortcut.
+2. Add the **Control Home** action.
+3. Select the timer switch created by this plugin and set it to **On**.
+4. Give the shortcut a unique spoken name, for example `Start bedroom AC timer`.
+5. Run it by saying the shortcut name to Siri.
+
+The shortcut only activates the HomeKit switch. The countdown is stored and
+executed by Homebridge on the Raspberry Pi, so the iPhone does not need to stay
+connected or keep the shortcut running until the timer expires.
 
 
 Common issues

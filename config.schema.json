@@ -51,6 +51,8 @@
             "name": {
               "title": "Appliance Name",
               "type": "string",
+              "required": true,
+              "minLength": 1,
               "description": "Exact appliance name as shown in ConnectLife (case-sensitive)"
             },
             "timer": {
@@ -67,7 +69,8 @@
                   "type": "integer",
                   "default": 60,
                   "minimum": 1,
-                  "maximum": 10080
+                  "placeholder": 60,
+                  "description": "Enter a duration from 1 to 10080 minutes."
                 },
                 "turnOnWhenStarted": {
                   "title": "Turn on AC when timer starts",
