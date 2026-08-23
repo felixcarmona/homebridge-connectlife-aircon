@@ -134,7 +134,7 @@ export class ConnectLifeAirconPlatform implements DynamicPlatformPlugin {
                 appliance.updateFromApi(apiAppliance);
                 this.airconAccessoriesByName
                     .get(name)
-                    ?.reconcileTimerWithApplianceState();
+                    ?.refreshFromApplianceState();
             }
         };
 
