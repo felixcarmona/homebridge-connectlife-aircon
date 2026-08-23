@@ -9,6 +9,21 @@
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/dev",
+    "branding/connectlife-icon.png",
+    "config.schema.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.js",
+    "test:live": "npm run build && node dist/dev/connect-life-test.js",
+    "pack:plugin": "npm test && npm pack"
+  },
   "keywords": [
     "homebridge-plugin",
     "homebridge",

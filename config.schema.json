@@ -26,6 +26,20 @@
         "format": "password",
         "description": "ConnectLife account password"
       },
+      "pollIntervalSeconds": {
+        "title": "Polling interval",
+        "type": "integer",
+        "default": 30,
+        "minimum": 15,
+        "maximum": 900,
+        "description": "Seconds between successful ConnectLife status updates. Errors use automatic backoff."
+      },
+      "diagnosticLogging": {
+        "title": "HomeKit service diagnostics",
+        "type": "boolean",
+        "default": false,
+        "description": "Log cached HomeKit service and characteristic names without values or cloud credentials."
+      },
       "appliances": {
         "title": "Appliances",
         "type": "array",
@@ -37,7 +51,33 @@
             "name": {
               "title": "Appliance Name",
               "type": "string",
+              "required": true,
+              "minLength": 1,
               "description": "Exact appliance name as shown in ConnectLife (case-sensitive)"
+            },
+            "timer": {
+              "title": "Shutdown timer",
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "title": "Enable timer switch",
+                  "type": "boolean",
+                  "default": false
+                },
+                "durationMinutes": {
+                  "title": "Timer duration in minutes",
+                  "type": "integer",
+                  "default": 60,
+                  "minimum": 1,
+                  "placeholder": 60,
+                  "description": "Enter a duration from 1 to 10080 minutes."
+                },
+                "turnOnWhenStarted": {
+                  "title": "Turn on AC when timer starts",
+                  "type": "boolean",
+                  "default": true
+                }
+              }
             }
           }
         }

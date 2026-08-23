@@ -1,6 +1,10 @@
 Homebridge ConnectLife Aircon
 ============================
 
+<p align="center">
+  <img src="branding/connectlife-icon.png" width="160" alt="ConnectLife logo">
+</p>
+
 Control your ConnectLife air conditioners from Apple HomeKit using Homebridge.
 
 This plugin connects to your ConnectLife account and exposes your air
@@ -20,6 +24,9 @@ For each configured air conditioner, HomeKit will show:
 - Swing mode on / off
 
 Everything is controlled from the Home app or via Siri.
+
+The plugin communicates directly with the ConnectLife / HijuConn cloud gateway.
+It does not require the external `connectlife.bapi.ovh` proxy.
 
 
 Requirements
@@ -51,6 +58,9 @@ The user must configure the following fields:
 - Email
 - Password
 - Appliances (by exact name)
+- Polling interval in seconds (optional, default: 30)
+- HomeKit service diagnostics (optional, disabled by default)
+- Persistent shutdown timer per appliance (optional, disabled by default)
 
 
 IMPORTANT: Appliance name
@@ -73,9 +83,16 @@ Example configuration
   "platform": "ConnectLifeAircon",
   "email": "you@example.com",
   "password": "your_connectlife_password",
+  "pollIntervalSeconds": 30,
+  "diagnosticLogging": false,
   "appliances": [
     {
-      "name": "Living Room AC"
+      "name": "Living Room AC",
+      "timer": {
+        "enabled": true,
+        "durationMinutes": 60,
+        "turnOnWhenStarted": true
+      }
     },
     {
       "name": "Bedroom AC"
@@ -83,6 +100,10 @@ Example configuration
   ]
 }
 
+When enabled, the timer appears as a `Timer 1h` switch in the same HomeKit
+accessory. Turning it on optionally starts the AC and stores an absolute expiry
+in the Homebridge accessory cache. Turning it off cancels the timer without
+switching off the AC. The expiry survives Homebridge and Raspberry restarts.
 
 After setup
 -----------
@@ -90,7 +111,24 @@ After setup
 - Restart Homebridge
 - Open the Apple Home app
 - Your air conditioners will appear automatically
-- Each AC is shown as a single Heater / Cooler accessory
+- Each AC is shown as a Heater / Cooler accessory
+- Timer-enabled appliances also expose a timer switch in the same accessory
+
+
+Set up a Siri shortcut
+----------------------
+
+The timer can be started by Siri through the Apple Shortcuts app:
+
+1. Open **Shortcuts** on an iPhone or iPad and create a new shortcut.
+2. Add the **Control Home** action.
+3. Select the timer switch created by this plugin and set it to **On**.
+4. Give the shortcut a unique spoken name, for example `Start bedroom AC timer`.
+5. Run it by saying the shortcut name to Siri.
+
+The shortcut only activates the HomeKit switch. The countdown is stored and
+executed by Homebridge on the Raspberry Pi, so the iPhone does not need to stay
+connected or keep the shortcut running until the timer expires.
 
 
 Common issues
@@ -104,6 +142,11 @@ AC does not appear:
 Commands do not work:
 - Verify email and password
 - Make sure your ConnectLife account is working in the official app
+
+Different controls for otherwise similar accessories:
+- Temporarily enable `diagnosticLogging` and restart Homebridge
+- Compare the cached service lists in the Homebridge log
+- Disable the option again after diagnosis to keep normal logs compact
 - Check Homebridge logs for errors
 
 
@@ -111,8 +154,25 @@ Notes
 -----
 
 - This plugin uses the ConnectLife cloud API (no local control)
+- OAuth access and refresh tokens are cached in the Homebridge storage folder
+  with owner-only permissions, avoiding a complete Gigya login after every
+  restart when a refresh token is available
+- Polling requests never overlap and use automatic backoff during cloud errors
 - Auto mode behavior depends on the AC model and firmware
 - Fan speed is mapped approximately to HomeKit percentages
+
+
+Credits
+-------
+
+The direct ConnectLife gateway implementation is based on the protocol
+documented by the MIT-licensed
+[bilan/connectlife-api-connector](https://github.com/bilan/connectlife-api-connector)
+project and was cross-checked against the
+[oyvindwe/connectlife](https://github.com/oyvindwe/connectlife) Python library.
+
+This plugin uses undocumented ConnectLife/HijuConn cloud endpoints. These
+endpoints and their authentication protocol may change without notice.
 
 
 Disclaimer
